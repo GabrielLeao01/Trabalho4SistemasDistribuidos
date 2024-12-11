@@ -1,0 +1,108 @@
+/* Estilo global */
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    margin: 0;
+    padding: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    background-color: #f4f4f9;
+    min-height: 100vh;
+    color: #333;
+}
+
+/* Header */
+header {
+    background-color: #2D3E4F;  /* Cor mais sofisticada */
+    color: white;
+    padding: 20px;
+    width: 100%;
+    text-align: center;
+    font-size: 1.5rem;
+    letter-spacing: 1px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Main content */
+main {
+    display: flex;
+    gap: 20px;
+    padding: 20px;
+    width: 90%;
+    max-width: 1200px;
+    margin-top: 20px;
+    flex-wrap: wrap;  /* Responsividade */
+    justify-content: space-between;
+}
+
+/* Section */
+section {
+    flex: 1 1 45%;
+    background: white;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 20px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;  /* Efeito suave */
+}
+
+section:hover {
+    transform: translateY(-5px);  /* Elevação ao passar o mouse */
+    box-shadow: 0 6px 15px rgba(0, 0, 0, 0.2);  /* Sombra mais intensa */
+}
+
+/* Títulos */
+h2 {
+    margin-top: 0;
+    font-size: 1.75rem;
+    color: #333;
+    margin-bottom: 10px;
+    font-weight: 600;
+}
+
+/* Lista */
+ul {
+    list-style-type: none;
+    padding: 0;
+}
+
+ul li {
+    margin-bottom: 10px;
+    font-size: 1rem;
+    color: #555;
+}
+
+/* Botões */
+button {
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+    padding: 12px 20px;
+    border-radius: 25px;
+    cursor: pointer;
+    font-size: 1rem;
+    font-weight: 500;
+    transition: background-color 0.3s ease, transform 0.3s ease;
+}
+
+button:hover {
+    background-color: #45a049;
+    transform: scale(1.05);  /* Efeito de zoom */
+}
+
+/* Responsividade */
+@media (max-width: 768px) {
+    main {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    section {
+        flex: 1 1 80%;
+        margin-bottom: 20px;
+    }
+
+    header {
+        font-size: 1.2rem;
+    }
+}
