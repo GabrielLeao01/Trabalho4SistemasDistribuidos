@@ -12,9 +12,9 @@ import threading
 app = Flask(__name__)
 CORS(app)
 produtos = [
-    {"id": 1, "name": "Produto A", "preco": 50.0, "quantidade": 30},
-    {"id": 2, "name": "Produto B", "preco": 75.0, "quantidade": 20},
-    {"id": 3, "name": "Produto C", "preco": 100.0, "quantidade": 40},
+    {"id": 1, "name": "Produto A", "preco": 50.0, "estoque": 30},
+    {"id": 2, "name": "Produto B", "preco": 75.0, "estoque": 20},
+    {"id": 3, "name": "Produto C", "preco": 100.0, "estoque": 40},
 ]
 carrinho = []
 orders = []
@@ -48,8 +48,9 @@ def consome_pedidos_criados():
         print(pedido)
         for item in pedido['items']:
             for produto in produtos:
-                if produto['id'] == item['id'] and produto['quantidade'] > 0:
-                    produto['quantidade'] -= 1
+                print(item)
+                if produto['id'] == item['produtoId'] and produto['estoque'] > 0:
+                    produto['estoque'] -= item['quantidade']
                 else:
                     print(f"nao ha mais produto {produto['id']} no estoque")
         
@@ -70,8 +71,8 @@ def consome_pedidos_excluidos():
         print(pedido)
         for item in pedido['items']:
             for produto in produtos:
-                if produto['id'] == item['id'] and produto['quantidade'] > 0:
-                    produto['quantidade'] += 1
+                if produto['id'] == item['produtoId'] and produto['estoque'] > 0:
+                    produto['estoque'] += item['quantidade']
                 else:
                     print(f"produto adicionado {produto['id']} no estoque")
         
