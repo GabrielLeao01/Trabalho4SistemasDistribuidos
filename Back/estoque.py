@@ -11,12 +11,12 @@ import threading
 
 app = Flask(__name__)
 CORS(app)
-products = [
-    {"id": 1, "name": "Produto A", "price": 50.0, "quantidade": 30},
-    {"id": 2, "name": "Produto B", "price": 75.0, "quantidade": 20},
-    {"id": 3, "name": "Produto C", "price": 100.0, "quantidade": 40},
+produtos = [
+    {"id": 1, "name": "Produto A", "preco": 50.0, "quantidade": 30},
+    {"id": 2, "name": "Produto B", "preco": 75.0, "quantidade": 20},
+    {"id": 3, "name": "Produto C", "preco": 100.0, "quantidade": 40},
 ]
-cart = []
+carrinho = []
 orders = []
 notifications = []
 # topicos
@@ -27,31 +27,31 @@ pedidos_excluidos = 'Pedidos_Excluidos'
 
 @app.route('/estoque', methods=['GET'])
 def get_estoque():
-    return jsonify(products), 200
+    return jsonify(produtos), 200
 
 @app.route('/estoque/remove', methods=['DELETE'])
 def remover_produto(p):
-    global products
-    products = [product for product in products if product["id"] != p['id']]
-    return jsonify({"items": cart}), 200
+    global produtos
+    produtos = [produto for produto in produtos if produto["id"] != p['id']]
+    return jsonify({"items": carrinho}), 200
 
 @app.route('/estoque/add', methods=['POST'])
-def adiciona_produto(product):
-    products.append(product)
+def adiciona_produto(produto):
+    produtos.append(produto)
     return jsonify({"message": "Produto adicionado ao estoque"}), 200
 
-def consume_pedidos_criados():
+def consome_pedidos_criados():
     def callback(ch, method, properties, body):
         pedido = json.loads(body)
         orders.append(pedido)
         notifications.append(f"Novo pedido criado: {pedido}")
         print(pedido)
         for item in pedido['items']:
-            for product in products:
-                if product['id'] == item['id'] and product['quantidade'] > 0:
-                    product['quantidade'] -= 1
+            for produto in produtos:
+                if produto['id'] == item['id'] and produto['quantidade'] > 0:
+                    produto['quantidade'] -= 1
                 else:
-                    print(f"nao ha mais produto {product['id']} no estoque")
+                    print(f"nao ha mais produto {produto['id']} no estoque")
         
     connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
     channel = connection.channel()
@@ -69,11 +69,11 @@ def consome_pedidos_excluidos():
         notifications.append(f"Novo pedido criado: {pedido}")
         print(pedido)
         for item in pedido['items']:
-            for product in products:
-                if product['id'] == item['id'] and product['quantidade'] > 0:
-                    product['quantidade'] += 1
+            for produto in produtos:
+                if produto['id'] == item['id'] and produto['quantidade'] > 0:
+                    produto['quantidade'] += 1
                 else:
-                    print(f"produto adicionado {product['id']} no estoque")
+                    print(f"produto adicionado {produto['id']} no estoque")
         
     connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
     channel = connection.channel()
@@ -85,7 +85,7 @@ def consome_pedidos_excluidos():
     channel.start_consuming()
 
 if __name__ == '__main__':
-    thread1 = threading.Thread(target=consume_pedidos_criados)
+    thread1 = threading.Thread(target=consome_pedidos_criados)
     thread1.start()
     app.run(debug=False, port=3002)
 

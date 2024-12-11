@@ -16,7 +16,7 @@ app.register_blueprint(sse, url_prefix='/stream')
 pedidos_criados = 'Pedidos_Criados'
 
 
-def consume_pedidos_criados():
+def consome_pedidos_criados():
     def callback(ch, method, properties, body):
         pedido = json.loads(body)
         print(f"novo pedido criado, enviando sse {pedido}")
@@ -32,7 +32,7 @@ def consume_pedidos_criados():
     print(' [*] NOTIFICACAO Waiting for messages. To exit press CTRL+C')
     channel.start_consuming()
 
-def consume_Pagamentos_aprovados():
+def consome_Pagamentos_aprovados():
     def callback(ch, method, properties, body):
         pedido = json.loads(body)
         print(f"pagamento aprovado, enviando sse {pedido}")
@@ -48,7 +48,7 @@ def consume_Pagamentos_aprovados():
     print(' [*] NOTIFICACAO Waiting for messages. To exit press CTRL+C')
     channel.start_consuming()
 
-def consume_pagamento_recusado():
+def consome_pagamento_recusado():
     def callback(ch, method, properties, body):
         pedido = json.loads(body)
         print(f"pagamento recusado, enviando sse {pedido}")
@@ -64,7 +64,7 @@ def consume_pagamento_recusado():
     print(' [*] NOTIFICACAO Waiting for messages. To exit press CTRL+C')
     channel.start_consuming()
 
-def consume_pedido_enviado():
+def consome_pedido_enviado():
     def callback(ch, method, properties, body):
         pedido = json.loads(body)
         print(f"pedido enviado, enviando sse {pedido}")
@@ -83,13 +83,13 @@ def consume_pedido_enviado():
     channel.start_consuming()
                 
 if __name__ == '__main__':
-    thread1 = threading.Thread(target=consume_pedidos_criados)
+    thread1 = threading.Thread(target=consome_pedidos_criados)
     thread1.start()
-    #thread2 = threading.Thread(target=consume_Pagamentos_aprovados)
+    #thread2 = threading.Thread(target=consome_Pagamentos_aprovados)
     #thread2.start()
-    #thread3 = threading.Thread(target=consume_pagamento_recusado)
+    #thread3 = threading.Thread(target=consome_pagamento_recusado)
     #thread3.start()
-    #thread4 = threading.Thread(target=consume_pedido_enviado)
+    #thread4 = threading.Thread(target=consome_pedido_enviado)
     #thread4.start()
 
     app.run(debug=False, port=6379)

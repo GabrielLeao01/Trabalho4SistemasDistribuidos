@@ -38,7 +38,7 @@ def publica_pagamento_aprovado(pedido):
     print(" [x] Sent 'Pagamento Aprovado'")
     connection.close()
 
-def consume_pedidos_criados():
+def consome_pedidos_criados():
     def callback(ch, method, properties, body):
         pedido = json.loads(body)
         print(pedido)
@@ -55,7 +55,7 @@ def consume_pedidos_criados():
     channel.start_consuming()
 
 if __name__ == '__main__':
-    thread1 = threading.Thread(target=consume_pedidos_criados)
+    thread1 = threading.Thread(target=consome_pedidos_criados)
     thread1.start()
     app.run(debug=False, port=3001)
 

@@ -10,14 +10,14 @@ import threading
 
 app = Flask(__name__)
 CORS(app)
-products = [
-    {"id": 1, "name": "Produto A", "price": 50.0},
-    {"id": 2, "name": "Produto B", "price": 75.0},
-    {"id": 3, "name": "Produto C", "price": 100.0},
+produtos = [
+    {"id": 1, "nome": "Produto A", "preco": 50.0},
+    {"id": 2, "nome": "Produto B", "preco": 75.0},
+    {"id": 3, "nome": "Produto C", "preco": 100.0},
 ]
-cart = []
+carrinho = []
 orders = []
-notifications = []
+notificacoes = []
 pedidos = []
 # topicos
 #publica
@@ -33,59 +33,59 @@ pedidos_enviados = 'Pedidos_Enviados'
 def get_pedidos():
     return jsonify(pedidos), 200
 
-@app.route('/products', methods=['GET'])
-def get_products():
-    return jsonify(products), 200
+@app.route('/produtos', methods=['GET'])
+def get_produtos():
+    return jsonify(produtos), 200
 
-@app.route('/cart', methods=['GET'])
-def get_cart():
-    return jsonify({"items": cart}), 200
+@app.route('/carrinho', methods=['GET'])
+def get_carrinho():
+    return jsonify({"items": carrinho}), 200
 
-@app.route('/cart/add', methods=['POST'])
-def add_to_cart():
+@app.route('/carrinho/add', methods=['POST'])
+def adicionar_carrinho():
     data = request.json
-    product_id = data.get("productId")
-    product = next((p for p in products if p["id"] == product_id), None)
-    if not product:
+    produto_id = data.get("produtoId")
+    produto = next((p for p in produtos if p["id"] == produto_id), None)
+    if not produto:
         return jsonify({"message": "Produto não encontrado"}), 404
 
-    existing_item = next((item for item in cart if item["productId"] == product_id), None)
+    existing_item = next((item for item in carrinho if item["produtoId"] == produto_id), None)
     if existing_item:
-        existing_item["quantity"] += 1
+        existing_item["quantidade"] += 1
     else:
-        cart.append({"productId": product["id"], "name": product["name"], "price": product["price"], "quantity": 1})
+        carrinho.append({"produtoId": produto["id"], "nome": produto["nome"], "preco": produto["preco"], "quantidade": 1})
 
     return jsonify({"message": "Produto adicionado ao carrinho"}), 200
 
-@app.route('/cart/remove', methods=['POST'])
-def remove_from_cart():
+@app.route('/carrinho/remove', methods=['POST'])
+def remover_carrinho():
     data = request.json
-    product_id = data.get("productId")
-    existing_item = next((item for item in cart if item["productId"] == product_id), None)
+    produto_id = data.get("produtoId")
+    existing_item = next((item for item in carrinho if item["produtoId"] == produto_id), None)
     if not existing_item:
         return jsonify({"message": "Produto não encontrado no carrinho"}), 404
 
-    if existing_item["quantity"] > 1:
-        existing_item["quantity"] -= 1
+    if existing_item["quantidade"] > 1:
+        existing_item["quantidade"] -= 1
     else:
-        cart.remove(existing_item)
+        carrinho.remove(existing_item)
 
     return jsonify({"message": "Produto removido do carrinho"}), 200
 
-@app.route('/cart/checkout', methods=['POST'])
+@app.route('/carrinho/checkout', methods=['POST'])
 def efetivar_compra():
 
-    if not cart:
+    if not carrinho:
         return jsonify({"message": "O carrinho está vazio"}), 400
     order = {
         "id": len(orders) + 1,
-        "items": cart.copy(),
-        "total": sum(item["price"] * item["quantity"] for item in cart),
+        "items": carrinho.copy(),
+        "total": sum(item["preco"] * item["quantidade"] for item in carrinho),
         "status": "Pedido Criado"
     }
     pedidos.append(order)
     orders.append(order)
-    cart.clear()
+    carrinho.clear()
     connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
     channel = connection.channel()
     channel.exchange_declare(exchange='direct_loja', exchange_type='direct')

@@ -1,92 +1,89 @@
 const API_BASE_URL = 'http://localhost:3000'; 
 const API_NOTIFICATION_URL = 'redis://localhost:6379/0'
-const PRODUCTS_API = `${API_BASE_URL}/products`;
+const PRODUCTS_API = `${API_BASE_URL}/produtos`;
 const ESTOQUE_API = `${API_BASE_URL}/estoque`;
-const CART_API = `${API_BASE_URL}/cart`;
+const CARRINHO_API = `${API_BASE_URL}/carrinho`;
 
-const productList = document.getElementById('product-list');
-const pedidosList  = document.getElementById('lista-pedidos');
-const cartList = document.getElementById('cart-list');
-const notificationList = document.getElementById('notification-list');
+const listaProdutos = document.getElementById('lista-produtos');
+const listaPedidos  = document.getElementById('lista-pedidos');
+const listaCarrinho = document.getElementById('lista-carrinho');
+const listaNotificacoes = document.getElementById('lista-notificacoes');
 const checkoutBtn = document.getElementById('checkout-btn');
 
-async function loadProducts() {
+async function carregaProdutos() {
     const response = await fetch(PRODUCTS_API);
-    const products = await response.json();
-    productList.innerHTML = '';
-    products.forEach(product => {
+    const produtos = await response.json();
+    listaProdutos.innerHTML = '';
+    produtos.forEach(produto => {
         const li = document.createElement('li');
-        li.textContent = `${product.name} - $${product.price}`;
+        li.textContent = `${produto.nome} - $${produto.preco}`;
         const addButton = document.createElement('button');
         addButton.textContent = 'Adicionar';
-        addButton.onclick = () => addToCart(product.id);
+        addButton.onclick = () => adicionaCarrinho(produto.id);
         li.appendChild(addButton);
-        productList.appendChild(li);
+        listaProdutos.appendChild(li);
     });
 }
-async function loadPedidos() {
+async function carregaPedidos() {
     const response = await fetch(`${API_BASE_URL}/pedidos`);
     const pedidos = await response.json();
-    pedidosList.innerHTML = '';
+    listaPedidos.innerHTML = '';
     pedidos.forEach(pedido => {
         const li = document.createElement('li');
         li.textContent = `${pedido.id} - ${pedido.status}`;
-        pedidosList.appendChild(li);
+        listaPedidos.appendChild(li);
     });
 }
 
-// Adicionar ao carrinho
-async function addToCart(productId) {
-    await fetch(`${CART_API}/add`, {
+async function adicionaCarrinho(produtoId) {
+    await fetch(`${CARRINHO_API}/add`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productId })
+        body: JSON.stringify({ produtoId })
     });
-    loadCart();
+    carregaCarrinho();
 }
 
-// Carregar carrinho
-async function loadCart() {
-    const response = await fetch(CART_API);
-    const cart = await response.json();
-    cartList.innerHTML = '';
-    cart.items.forEach(item => {
+async function carregaCarrinho() {
+    const response = await fetch(CARRINHO_API);
+    const carrinho = await response.json();
+    listaCarrinho.innerHTML = '';
+    carrinho.items.forEach(item => {
         const li = document.createElement('li');
-        li.textContent = `${item.name} - $${item.price} x ${item.quantity}`;
+        li.textContent = `${item.nome} - $${item.preco} x ${item.quantidade}`;
         const removeButton = document.createElement('button');
         removeButton.textContent = 'Remover';
-        removeButton.onclick = () => removeFromCart(item.productId);
+        removeButton.onclick = () => removeCarrinho(item.produtoId);
         li.appendChild(removeButton);
-        cartList.appendChild(li);
+        listaCarrinho.appendChild(li);
     });
 }
 
-async function removeFromCart(productId) {
-    await fetch(`${CART_API}/remove`, {
+async function removeCarrinho(produtoId) {
+    await fetch(`${CARRINHO_API}/remove`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ productId })
+        body: JSON.stringify({ produtoId })
     });
-    loadCart();
+    carregaCarrinho();
 }
 
 checkoutBtn.onclick = async () => {
-    await fetch(`${CART_API}/checkout`, { method: 'POST' });
-    loadCart();
+    await fetch(`${CARRINHO_API}/checkout`, { method: 'POST' });
+    carregaCarrinho();
     alert('Pedido realizado com sucesso!');
-    loadPedidos();
+    carregaPedidos();
 };
 
-// Notificações via SSE
 function setupSSE() {
-    const notificationList = document.getElementById('notification-list'); // Defina o elemento correto
+    const listaNotificacoes = document.getElementById('notification-list'); 
     const eventSource = new EventSource(`${API_BASE_URL}/stream`);
 
     eventSource.onmessage = event => {
         const notification = JSON.parse(event.data);
         const li = document.createElement('li');
         li.textContent = `Pedido ${notification.id}: ${notification.status}`;
-        notificationList.appendChild(li);
+        listaNotificacoes.appendChild(li);
     };
 
     eventSource.onerror = error => {
@@ -95,8 +92,7 @@ function setupSSE() {
 }
 
 
-// Inicialização
-loadProducts();
-loadPedidos();
-loadCart();
+carregaProdutos();
+carregaPedidos();
+carregaCarrinho();
 setupSSE();
