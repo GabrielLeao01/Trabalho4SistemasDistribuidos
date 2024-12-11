@@ -12,9 +12,9 @@ import threading
 app = Flask(__name__)
 CORS(app)
 produtos = [
-    {"id": 1, "name": "Produto A", "preco": 50.0, "estoque": 30},
-    {"id": 2, "name": "Produto B", "preco": 75.0, "estoque": 20},
-    {"id": 3, "name": "Produto C", "preco": 100.0, "estoque": 40},
+    {"id": 1, "nome": "Produto A", "preco": 50.0, "estoque": 30},
+    {"id": 2, "nome": "Produto B", "preco": 75.0, "estoque": 20},
+    {"id": 3, "nome": "Produto C", "preco": 100.0, "estoque": 40},
 ]
 carrinho = []
 orders = []
