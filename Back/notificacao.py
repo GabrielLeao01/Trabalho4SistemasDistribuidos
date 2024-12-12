@@ -15,8 +15,6 @@ CORS(app)
 app.config["REDIS_URL"] = "redis://localhost" 
 app.register_blueprint(sse, url_prefix='/stream')
 
-#topicos
-#consome
 pedidos_criados = 'Pedidos_Criados'
 pedidos_enviados = 'Pedidos_Enviados'
 pagamentos_aprovados = 'Pagamentos_Aprovados'

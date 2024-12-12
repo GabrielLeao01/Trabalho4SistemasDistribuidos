@@ -36,16 +36,7 @@ def consome_pedidos_criados():
     def callback(ch, method, properties, body):
         pedido = json.loads(body)
         pagamento = input("Pagamento - aprovado/recusado: ")
-        if(pedido):
-            start_time = time.time()
-            while True:
-                if time.time() - start_time > 10:
-                    print("Timeout: Cliente não realizou o pagamento em 30 segundos.")
-                    pagamento = 'recusado'
-                    break
-                pagamento = input("Pagamento - aprovado/recusado: ")
-                if pagamento in ['aprovado', 'recusado']:
-                    break
+        if(pedido):            
             if(pagamento == 'aprovado'):
                 print(pedido)
                 print(type(pedido))

@@ -24,11 +24,8 @@ carrinho = []
 orders = []
 notificacoes = []
 pedidos = []
-# topicos
-#publica
 pedidos_criados = 'Pedidos_Criados'
 pedidos_excluidos = 'Pedidos_Excluidos'
-#consome
 pagamentos_aprovados = 'Pagamentos_Aprovados'
 pagamentos_recusados = 'Pagamentos_Recusados'
 pedidos_enviados = 'Pedidos_Enviados'
