@@ -16,7 +16,7 @@ async function carregaProdutos() {
     listaProdutos.innerHTML = '';
     produtos.forEach(produto => {
         const li = document.createElement('li');
-        li.textContent = `${produto.nome} - $${produto.preco}`;
+        li.textContent = `${produto.nome} - $${produto.preco} - Estoque: ${produto.estoque}`;
         const addButton = document.createElement('button');
         addButton.textContent = 'Adicionar';
         addButton.onclick = () => adicionaCarrinho(produto.id);
@@ -48,7 +48,8 @@ async function removePedido(pedidoId) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id:pedidoId })
     });
-    carregaPedidos();
+    alert('Pedido removido com sucesso!');
+    carregaProdutos();
 }
 
 async function adicionaCarrinho(produtoId) {
@@ -89,6 +90,7 @@ checkoutBtn.onclick = async () => {
     carregaCarrinho();
     alert('Pedido realizado com sucesso!');
     carregaPedidos();
+    carregaProdutos();
 };
 
 function setupSSE() {
@@ -103,6 +105,7 @@ function setupSSE() {
             li.textContent = `${notificacao}`;
             listaNotificacoes.appendChild(li);
             carregaPedidos()
+            carregaProdutos()
         }
     })
     eventSource.onmessage = event => {

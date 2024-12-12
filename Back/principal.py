@@ -13,13 +13,17 @@ from publicar import Publicar
 app = Flask(__name__)
 CORS(app)
 produtos = []
-try:
-    response = requests.get('http://localhost:3002/estoque')
-    produtos = response.json()
-    print("Resposta do Microserviço B:", response.json())
-except requests.exceptions.RequestException as e:
-    print("Erro na requisição:", e)
-    exit(1)
+def atualiza_produtos():
+    try:
+        response = requests.get('http://localhost:3002/estoque')
+        global produtos
+        produtos = response.json()
+        print("Resposta do Microserviço B:", response.json())
+    except requests.exceptions.RequestException as e:
+        print("Erro na requisição:", e)
+        exit(1)
+
+atualiza_produtos()
 carrinho = []
 orders = []
 notificacoes = []
@@ -91,7 +95,7 @@ def efetivar_compra():
     carrinho.clear()
     msg = "'Pedidos_Criados'"
     Publicar(pedidos_criados, order, msg)
-
+    atualiza_produtos()
     return jsonify({"message": "Compra efetivada", "order": order}), 200
 
 @app.route('/pedidos/excluir', methods=['DELETE'])
@@ -109,7 +113,9 @@ def excluir_pedido():
             pedido['items'] = p['items']
             msg = "'Pedidos_Excluidos'"
             Publicar(pedidos_excluidos, pedido, msg)
+            atualiza_produtos()
             return jsonify({"message": "Pedido removido com sucesso"}), 200
+    
     return jsonify({"message": "Pedido não encontrado"}), 404
 
         
@@ -136,6 +142,7 @@ def consome_pagamentos_recusados():
         msg = f"pedido {dados_pedido['id']} pagamento recusado"
         atualiza_status_pedido(dados_pedido)
         publicar = Publicar(pedidos_excluidos, dados_pedido, msg)
+        atualiza_produtos()
         print(dados_pedido)
 
     msg = "[*] Principal - pagamentos recusados - Waiting for messages."
