@@ -98,7 +98,7 @@ def consome_pedido_enviado():
 def consome_pedido_excluido():
     def callback(ch, method, properties, body):
         pedido = json.loads(body)
-        print(f"pedido enviado, enviando sse {pedido}")
+        print(f"pedido excluido, enviando sse {pedido}")
         with app.app_context():
             #sse.publish({"message": pedido}, type='publish')
             message = f"Pedido {pedido['id']} excluido"

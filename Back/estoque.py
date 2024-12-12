@@ -24,6 +24,11 @@ pedidos_criados = 'Pedidos_Criados'
 pedidos_excluidos = 'Pedidos_Excluidos'
 pagamentos_recusados = 'Pagamentos_Recusados'
 
+# somente para criar a exchange e nao dar erro
+connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+channel = connection.channel()
+channel.exchange_declare(exchange='direct_loja', exchange_type='direct')
+connection.close()
 
 @app.route('/estoque', methods=['GET'])
 def get_estoque():
@@ -43,37 +48,23 @@ def adiciona_produto(produto):
 def consome_pedidos_criados():
     def callback(ch, method, properties, body):
         pedido = json.loads(body)
-        #orders.append(pedido)
-        print(f"Novo pedido criado: {pedido}")
-        print(type(pedido))
         if isinstance(pedido, dict):
-            print(pedido)
             for item in pedido['items']:
                 for produto in produtos:
                     if produto['id'] == item['produtoId']:
                         if (produto['estoque'] - item['quantidade']) >= 0:
-                            print(item)
                             print(f"produto {item['produtoId']} removido do estoque")
                             produto['estoque'] -= item['quantidade']
                         else:
                             print(f"nao ha produtos {produto['id']} suficientes no estoque")
         else: 
             print("Erro: pedido não é um dicionário") 
-
-        connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
-        channel = connection.channel()
-        result = channel.queue_declare(queue='', exclusive=True)
-        queue_name = result.method.queue
-        channel.queue_bind(exchange='direct_loja', queue=queue_name, routing_key=pedidos_criados)
-        channel.basic_consume(queue=queue_name, on_message_callback=callback, auto_ack=True)
-        print(' [*] ESTOQUE Waiting for messages. To exit press CTRL+C')
-        channel.start_consuming()
+    consumir = Consumir(pedidos_criados, callback, ' [*] ESTOQUE Waiting for messages. To exit press CTRL+C')
 
 def consome_pedidos_excluidos():
     def callback(ch, method, properties, body):
         pedido = json.loads(body)
-        #orders.append(pedido)
-        print("pagamento excluido, retornando itens no estoque")
+        print(f"pedido {pedido['id']} exlcuido, retornando itens no estoque")
         if isinstance(pedido, dict): 
             for item in pedido['items']:
                 for produto in produtos:

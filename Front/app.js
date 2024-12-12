@@ -42,10 +42,11 @@ async function carregaPedidos() {
     });
 }
 async function removePedido(pedidoId) {
+    console.log(pedidoId)
     await fetch(`${API_BASE_URL}/pedidos/excluir`, {
-        method: 'POST',
+        method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ pedidoId })
+        body: JSON.stringify({ id:pedidoId })
     });
     carregaPedidos();
 }

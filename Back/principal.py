@@ -12,12 +12,14 @@ from consumir import Consumir
 from publicar import Publicar
 app = Flask(__name__)
 CORS(app)
-
-produtos = [
-    {"id": 1, "nome": "Produto A", "preco": 50.0},
-    {"id": 2, "nome": "Produto B", "preco": 75.0},
-    {"id": 3, "nome": "Produto C", "preco": 100.0},
-]
+produtos = []
+try:
+    response = requests.get('http://localhost:3002/estoque')
+    produtos = response.json()
+    print("Resposta do Microserviço B:", response.json())
+except requests.exceptions.RequestException as e:
+    print("Erro na requisição:", e)
+    exit(1)
 carrinho = []
 orders = []
 notificacoes = []
@@ -101,18 +103,26 @@ def efetivar_compra():
 
     return jsonify({"message": "Compra efetivada", "order": order}), 200
 
-@app.route('/pedidos/excluir', methods=['POST'])
+@app.route('/pedidos/excluir', methods=['DELETE'])
 def excluir_pedido():
     pedido = request.json
-    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
-    channel = connection.channel()
-    channel.exchange_declare(exchange='direct_loja', exchange_type='direct')
-    pedido['status'] = 'Pedido excluido'
-    message = json.dumps(pedido)
-    print(message)
-    channel.basic_publish(exchange='direct_loja', routing_key=pedidos_excluidos, body=message)
-    connection.close()
-    return jsonify({"message": "Pedido removido"}), 200
+    for p in pedidos:
+        if(p['id'] == pedido['id'] and not (p['status'] == 'Pedido excluido')):
+            connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+            channel = connection.channel()
+            channel.exchange_declare(exchange='direct_loja', exchange_type='direct')
+            pedido['status'] = 'Pedido excluido'
+            p['status'] = pedido['status']
+            pedido['items'] = p['items']
+            message = json.dumps(pedido)
+            print(message)
+            channel.basic_publish(exchange='direct_loja', routing_key=pedidos_excluidos, body=message)
+            connection.close()
+            return jsonify({"message": "Pedido removido"}), 200
+        else:
+            return jsonify({"message": "Pedido não existe"}), 404
+
+        
 
 def atualiza_status_pedido(dados_pedido):
     print(dados_pedido)
