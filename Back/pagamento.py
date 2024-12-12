@@ -21,14 +21,6 @@ pedidos_criados = 'Pedidos_Criados'
 pedidos_excluidos = 'Pedidos_Excluidos'
 
 pedidos = []
-@app.route('/entrega', methods=['GET'])
-def envia_produto(compra):
-    nota = emitir_nota()
-    return jsonify(), 200
-
-def emitir_nota(compra):
-    nota = compra
-    return nota
 
 def altera_status_pedido(pedido,pagamento): 
     pedido['status'] = 'Pagamento '+ pagamento 
@@ -45,6 +37,15 @@ def consome_pedidos_criados():
         pedido = json.loads(body)
         pagamento = input("Pagamento - aprovado/recusado: ")
         if(pedido):
+            start_time = time.time()
+            while True:
+                if time.time() - start_time > 10:
+                    print("Timeout: Cliente não realizou o pagamento em 30 segundos.")
+                    pagamento = 'recusado'
+                    break
+                pagamento = input("Pagamento - aprovado/recusado: ")
+                if pagamento in ['aprovado', 'recusado']:
+                    break
             if(pagamento == 'aprovado'):
                 print(pedido)
                 print(type(pedido))

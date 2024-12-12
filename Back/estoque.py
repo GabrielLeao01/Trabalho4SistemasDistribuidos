@@ -18,8 +18,7 @@ produtos = [
 ]
 carrinho = []
 orders = []
-# topicos
-#consome
+
 pedidos_criados = 'Pedidos_Criados'
 pedidos_excluidos = 'Pedidos_Excluidos'
 pagamentos_recusados = 'Pagamentos_Recusados'

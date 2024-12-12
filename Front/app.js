@@ -92,7 +92,6 @@ checkoutBtn.onclick = async () => {
 };
 
 function setupSSE() {
-    console.log("IRINEU")
     const listaNotificacoes = document.getElementById('lista-notificacoes'); 
     const eventSource = new EventSource("http://localhost:3006/stream");
     console.log(eventSource)

@@ -19,14 +19,6 @@ pedidos_enviados = 'Pedidos_Enviados'
 #consome
 pagamentos_aprovados = 'Pagamentos_Aprovados'
 
-@app.route('/entrega', methods=['GET'])
-def envia_produto(compra):
-    nota = emitir_nota()
-    return jsonify(), 200
-
-def emitir_nota(compra):
-    nota = compra
-    return nota
 
 def altera_status_pedido(pedido):
     pedido['status'] = 'Pedido enviado'
