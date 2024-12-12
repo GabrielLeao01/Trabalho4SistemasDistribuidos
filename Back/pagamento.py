@@ -7,11 +7,15 @@ import json
 import time
 import pika
 import threading
-
+from publicar import Publicar
+from consumir import Consumir
 app = Flask(__name__)
 CORS(app)
 
 # topicos
+#publica
+pagamentos_aprovados = 'Pagamentos_Aprovados'
+pagamentos_recusados = 'Pagamentos_Recusados'
 #consome
 pedidos_criados = 'Pedidos_Criados'
 pedidos_excluidos = 'Pedidos_Excluidos'
@@ -26,25 +30,33 @@ def emitir_nota(compra):
     nota = compra
     return nota
 
-def altera_status_pedido(pedido):
-    pedido['status'] = 'Pagamento aprovado'
+def altera_status_pedido(pedido,pagamento): 
+    pedido['status'] = 'Pagamento '+ pagamento 
     return pedido
 
+
 def publica_pagamento_aprovado(pedido):
-    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
-    channel = connection.channel()
-    channel.exchange_declare(exchange='direct_loja', exchange_type='direct')
-    channel.basic_publish(exchange='direct_loja', routing_key='Pagamentos_Aprovados', body=json.dumps(pedido))
-    print(" [x] Sent 'Pagamento Aprovado'")
-    connection.close()
+    publicar = Publicar(pagamentos_aprovados, pedido, " [x] Sent 'Pagamento Aprovado'")
+def publica_pagamento_recusado(pedido):
+    publicar = Publicar(pagamentos_recusados, pedido, " [x] Sent 'Pagamento Recusado'")
 
 def consome_pedidos_criados():
     def callback(ch, method, properties, body):
         pedido = json.loads(body)
-        print(pedido)
-        pedido = altera_status_pedido(pedido)
-        publica_pagamento_aprovado(pedido)
-
+        pagamento = input("Pagamento - aprovado/recusado: ")
+        if(pedido):
+            if(pagamento == 'aprovado'):
+                print(pedido)
+                print(type(pedido))
+                pedido = altera_status_pedido(pedido,pagamento)
+                publica_pagamento_aprovado(pedido)
+            elif(pagamento == 'recusado'):
+                print(pedido)
+                print(type(pedido))
+                pedido = altera_status_pedido(pedido,pagamento)
+                publica_pagamento_recusado(pedido)
+            else:
+                print('opcao nao valida')
     connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
     channel = connection.channel()
     result = channel.queue_declare(queue='', exclusive=True)

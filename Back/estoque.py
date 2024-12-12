@@ -7,7 +7,7 @@ import json
 import time
 import pika
 import threading
-
+from consumir import Consumir
 
 app = Flask(__name__)
 CORS(app)
@@ -18,11 +18,11 @@ produtos = [
 ]
 carrinho = []
 orders = []
-notifications = []
 # topicos
 #consome
 pedidos_criados = 'Pedidos_Criados'
 pedidos_excluidos = 'Pedidos_Excluidos'
+pagamentos_recusados = 'Pagamentos_Recusados'
 
 
 @app.route('/estoque', methods=['GET'])
@@ -43,50 +43,58 @@ def adiciona_produto(produto):
 def consome_pedidos_criados():
     def callback(ch, method, properties, body):
         pedido = json.loads(body)
-        orders.append(pedido)
-        notifications.append(f"Novo pedido criado: {pedido}")
-        print(pedido)
-        for item in pedido['items']:
-            for produto in produtos:
-                print(item)
-                if produto['id'] == item['produtoId'] and produto['estoque'] > 0:
-                    produto['estoque'] -= item['quantidade']
-                else:
-                    print(f"nao ha mais produto {produto['id']} no estoque")
-        
-    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
-    channel = connection.channel()
-    result = channel.queue_declare(queue='', exclusive=True)
-    queue_name = result.method.queue
-    channel.queue_bind(exchange='direct_loja', queue=queue_name, routing_key=pedidos_criados)
-    channel.basic_consume(queue=queue_name, on_message_callback=callback, auto_ack=True)
-    print(' [*] ESTOQUE Waiting for messages. To exit press CTRL+C')
-    channel.start_consuming()
+        #orders.append(pedido)
+        print(f"Novo pedido criado: {pedido}")
+        print(type(pedido))
+        if isinstance(pedido, dict):
+            print(pedido)
+            for item in pedido['items']:
+                for produto in produtos:
+                    if produto['id'] == item['produtoId']:
+                        if (produto['estoque'] - item['quantidade']) >= 0:
+                            print(item)
+                            print(f"produto {item['produtoId']} removido do estoque")
+                            produto['estoque'] -= item['quantidade']
+                        else:
+                            print(f"nao ha produtos {produto['id']} suficientes no estoque")
+        else: 
+            print("Erro: pedido não é um dicionário") 
+
+        connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+        channel = connection.channel()
+        result = channel.queue_declare(queue='', exclusive=True)
+        queue_name = result.method.queue
+        channel.queue_bind(exchange='direct_loja', queue=queue_name, routing_key=pedidos_criados)
+        channel.basic_consume(queue=queue_name, on_message_callback=callback, auto_ack=True)
+        print(' [*] ESTOQUE Waiting for messages. To exit press CTRL+C')
+        channel.start_consuming()
 
 def consome_pedidos_excluidos():
     def callback(ch, method, properties, body):
         pedido = json.loads(body)
-        orders.append(pedido)
-        notifications.append(f"Novo pedido criado: {pedido}")
-        print(pedido)
-        for item in pedido['items']:
-            for produto in produtos:
-                if produto['id'] == item['produtoId'] and produto['estoque'] > 0:
-                    produto['estoque'] += item['quantidade']
-                else:
-                    print(f"produto adicionado {produto['id']} no estoque")
-        
+        #orders.append(pedido)
+        print("pagamento excluido, retornando itens no estoque")
+        if isinstance(pedido, dict): 
+            for item in pedido['items']:
+                for produto in produtos:
+                    if produto['id'] == item['produtoId']:
+                        print(f"produto {item['produtoId']} adicionado ao estoque")
+                        produto['estoque'] += item['quantidade']
+        else: 
+            print("Erro: pedido não é um dicionário") 
     connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
     channel = connection.channel()
     result = channel.queue_declare(queue='', exclusive=True)
     queue_name = result.method.queue
-    channel.queue_bind(exchange='direct_loja', queue=queue_name, routing_key=pedidos_criados)
+    channel.queue_bind(exchange='direct_loja', queue=queue_name, routing_key=pedidos_excluidos)
     channel.basic_consume(queue=queue_name, on_message_callback=callback, auto_ack=True)
     print(' [*] ESTOQUE EXLCUIDOS Waiting for messages. To exit press CTRL+C')
-    channel.start_consuming()
-
+    channel.start_consuming()          
+          
 if __name__ == '__main__':
-    thread1 = threading.Thread(target=consome_pedidos_criados)
-    thread1.start()
+    thread_consome_pedidos_criados = threading.Thread(target=consome_pedidos_criados)
+    thread_consome_pedidos_criados.start()
+    thread_consome_pagamentos_recusados = threading.Thread(target=consome_pedidos_excluidos)
+    thread_consome_pagamentos_recusados.start()
     app.run(debug=False, port=3002)
 

@@ -7,9 +7,12 @@ import json
 import time
 import pika
 import threading
-
+import requests
+from consumir import Consumir 
+from publicar import Publicar
 app = Flask(__name__)
 CORS(app)
+
 produtos = [
     {"id": 1, "nome": "Produto A", "preco": 50.0},
     {"id": 2, "nome": "Produto B", "preco": 75.0},
@@ -85,6 +88,7 @@ def efetivar_compra():
     }
     pedidos.append(order)
     orders.append(order)
+    print(orders)
     carrinho.clear()
     connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
     channel = connection.channel()
@@ -97,19 +101,21 @@ def efetivar_compra():
 
     return jsonify({"message": "Compra efetivada", "order": order}), 200
 
-@app.route('/pedidos/excluir', methods=['DELETE'])
+@app.route('/pedidos/excluir', methods=['POST'])
 def excluir_pedido():
     pedido = request.json
     connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
     channel = connection.channel()
     channel.exchange_declare(exchange='direct_loja', exchange_type='direct')
-
+    pedido['status'] = 'Pedido excluido'
     message = json.dumps(pedido)
     print(message)
     channel.basic_publish(exchange='direct_loja', routing_key=pedidos_excluidos, body=message)
     connection.close()
+    return jsonify({"message": "Pedido removido"}), 200
 
 def atualiza_status_pedido(dados_pedido):
+    print(dados_pedido)
     for pedido in pedidos:
         if pedido['id'] == dados_pedido['id']:
             pedido['status'] = dados_pedido['status']
@@ -126,28 +132,25 @@ def consome_pagamentos_aprovados():
     queue_name = result.method.queue
     channel.queue_bind(exchange='direct_loja', queue=queue_name, routing_key=pagamentos_aprovados)
     channel.basic_consume(queue=queue_name, on_message_callback=callback, auto_ack=True)
-    print(' [*] Waiting for messages. To exit press CTRL+C')
+    print("[*] Principal - pagamentos aprovados - Waiting for messages.")
     channel.start_consuming()
 
 def consome_pagamentos_recusados():
     def callback(ch, method, properties, body):
         dados_pedido = json.loads(body)
-        connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
-        channel = connection.channel()
-        channel.exchange_declare(exchange='direct_loja', exchange_type='direct')
-
-        pedido = json.dumps(dados_pedido)
-        channel.basic_publish(exchange='direct_loja', routing_key=pedidos_excluidos, body=pedido)
-        connection.close()
+        msg = f"pedido {dados_pedido['id']} pagamento recusado"
+        atualiza_status_pedido(dados_pedido)
+        publicar = Publicar(pedidos_excluidos, dados_pedido, msg)
         print(dados_pedido)
-
+    msg = "[*] Principal - pagamentos recusados - Waiting for messages."
+    #consumir = Consumir(pagamentos_recusados, callback, msg)
     connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
     channel = connection.channel()
     result = channel.queue_declare(queue='', exclusive=True)
     queue_name = result.method.queue
     channel.queue_bind(exchange='direct_loja', queue=queue_name, routing_key=pagamentos_recusados)
     channel.basic_consume(queue=queue_name, on_message_callback=callback, auto_ack=True)
-    print(' [*] Waiting for messages. To exit press CTRL+C')
+    print(msg)
     channel.start_consuming()
 
 def consome_pedidos_enviados():
@@ -161,7 +164,7 @@ def consome_pedidos_enviados():
     queue_name = result.method.queue
     channel.queue_bind(exchange='direct_loja', queue=queue_name, routing_key=pedidos_enviados)
     channel.basic_consume(queue=queue_name, on_message_callback=callback, auto_ack=True)
-    print(' [*] Waiting for messages. To exit press CTRL+C')
+    print("[*] Principal - pedidos enviados - Waiting for messages.")
     channel.start_consuming()
 
 if __name__ == '__main__':

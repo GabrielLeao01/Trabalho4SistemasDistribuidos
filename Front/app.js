@@ -29,10 +29,25 @@ async function carregaPedidos() {
     const pedidos = await response.json();
     listaPedidos.innerHTML = '';
     pedidos.forEach(pedido => {
+        const id =pedido.id
         const li = document.createElement('li');
         li.textContent = `${pedido.id} - ${pedido.status}`;
+        const removePedidoButton = document.createElement('button');       
         listaPedidos.appendChild(li);
+        if(pedido.status == 'Pedido Criado' ){
+            removePedidoButton.textContent = 'Remover'; 
+            li.appendChild(removePedidoButton);
+            removePedidoButton.onclick = () => removePedido(pedido.id);
+        }
     });
+}
+async function removePedido(pedidoId) {
+    await fetch(`${API_BASE_URL}/pedidos/excluir`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ pedidoId })
+    });
+    carregaPedidos();
 }
 
 async function adicionaCarrinho(produtoId) {
@@ -76,14 +91,22 @@ checkoutBtn.onclick = async () => {
 };
 
 function setupSSE() {
-    const listaNotificacoes = document.getElementById('notification-list'); 
-    const eventSource = new EventSource(`${API_BASE_URL}/stream`);
-
-    eventSource.onmessage = event => {
-        const notification = JSON.parse(event.data);
+    console.log("IRINEU")
+    const listaNotificacoes = document.getElementById('lista-notificacoes'); 
+    const eventSource = new EventSource("http://localhost:3006/stream");
+    console.log(eventSource)
+    eventSource.addEventListener('publish',function(event) {
+        let notificacao = JSON.parse(event.data).message;
+        console.log(notificacao)
         const li = document.createElement('li');
-        li.textContent = `Pedido ${notification.id}: ${notification.status}`;
-        listaNotificacoes.appendChild(li);
+        if(notificacao){
+            li.textContent = `${notificacao}`;
+            listaNotificacoes.appendChild(li);
+            carregaPedidos()
+        }
+    })
+    eventSource.onmessage = event => {
+        console.log(event)
     };
 
     eventSource.onerror = error => {

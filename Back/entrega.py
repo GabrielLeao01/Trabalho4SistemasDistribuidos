@@ -7,7 +7,8 @@ import json
 import time
 import pika
 import threading
-
+from consumir import Consumir
+from publicar import Publicar
 pagamentos_aprovados = 'pagamentos_aprovados'
 app = Flask(__name__)
 CORS(app)
@@ -31,6 +32,8 @@ def altera_status_pedido(pedido):
     pedido['status'] = 'Pedido enviado'
     return pedido
 
+
+
 def consome_pagamentos_aprovados():
     def callback(ch, method, properties, body):
         pedido = json.loads(body)
@@ -44,14 +47,15 @@ def consome_pagamentos_aprovados():
     queue_name = result.method.queue
     channel.queue_bind(exchange='direct_loja', queue=queue_name, routing_key=pagamentos_aprovados)
     channel.basic_consume(queue=queue_name, on_message_callback=callback, auto_ack=True)
-    print(' [*] Waiting for messages. To exit press CTRL+C')
+    print("[*] Entrega - esperando pagamentos aprovados - Waiting for messages.")
     channel.start_consuming()
 
 def publica_pedido_enviado(pedido):
+    print(" PEDIDO ENVIADO  ________------------")
     connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
     channel = connection.channel()
     channel.exchange_declare(exchange='direct_loja', exchange_type='direct')
-    channel.basic_publish(exchange='direct_loja', routing_key='Pedidos_Enviados', body=json.dumps(pedido))
+    channel.basic_publish(exchange='direct_loja', routing_key=pedidos_enviados, body=json.dumps(pedido))
     print(" [x] Sent 'pedido enviado'")
     connection.close()
 
