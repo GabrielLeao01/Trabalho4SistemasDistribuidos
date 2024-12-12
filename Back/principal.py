@@ -110,12 +110,8 @@ def excluir_pedido():
             p['status'] = 'Pedido excluido'
             pedido['status'] = 'Pedido excluido'
             pedido['items'] = p['items']
-            connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
-            channel = connection.channel()
-            channel.exchange_declare(exchange='direct_loja', exchange_type='direct')
-            message = json.dumps(pedido)
-            channel.basic_publish(exchange='direct_loja', routing_key='pedidos_excluidos', body=message)
-            connection.close()
+            msg = "'Pedidos_Excluidos'"
+            Publicar(pedidos_excluidos, pedido, msg)
             return jsonify({"message": "Pedido removido com sucesso"}), 200
     return jsonify({"message": "Pedido não encontrado"}), 404
 
