@@ -92,14 +92,8 @@ def efetivar_compra():
     orders.append(order)
     print(orders)
     carrinho.clear()
-    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
-    channel = connection.channel()
-    channel.exchange_declare(exchange='direct_loja', exchange_type='direct')
-
-    message = json.dumps(order)
-    print(message)
-    channel.basic_publish(exchange='direct_loja', routing_key=pedidos_criados, body=message)
-    connection.close()
+    msg = "'Pedidos_Criados'"
+    Publicar(pedidos_criados, order, msg)
 
     return jsonify({"message": "Compra efetivada", "order": order}), 200
 
@@ -108,16 +102,13 @@ def excluir_pedido():
     pedido = request.json
     for p in pedidos:
         if(p['id'] == pedido['id'] and not (p['status'] == 'Pedido excluido')):
-            connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
-            channel = connection.channel()
-            channel.exchange_declare(exchange='direct_loja', exchange_type='direct')
             pedido['status'] = 'Pedido excluido'
             p['status'] = pedido['status']
             pedido['items'] = p['items']
             message = json.dumps(pedido)
+            msg = "'Pedidos excluidos'"
             print(message)
-            channel.basic_publish(exchange='direct_loja', routing_key=pedidos_excluidos, body=message)
-            connection.close()
+            Publicar(pedidos_excluidos, pedido, msg)
             return jsonify({"message": "Pedido removido"}), 200
         else:
             return jsonify({"message": "Pedido não existe"}), 404
@@ -136,14 +127,9 @@ def consome_pagamentos_aprovados():
         dados_pedido = json.loads(body)
         print(dados_pedido)
         atualiza_status_pedido(dados_pedido)
-    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
-    channel = connection.channel()
-    result = channel.queue_declare(queue='', exclusive=True)
-    queue_name = result.method.queue
-    channel.queue_bind(exchange='direct_loja', queue=queue_name, routing_key=pagamentos_aprovados)
-    channel.basic_consume(queue=queue_name, on_message_callback=callback, auto_ack=True)
-    print("[*] Principal - pagamentos aprovados - Waiting for messages.")
-    channel.start_consuming()
+
+    msg = "[*] Principal - pagamentos aprovados - Waiting for messages."
+    Consumir(pagamentos_aprovados, callback, msg)
 
 def consome_pagamentos_recusados():
     def callback(ch, method, properties, body):
@@ -152,30 +138,18 @@ def consome_pagamentos_recusados():
         atualiza_status_pedido(dados_pedido)
         publicar = Publicar(pedidos_excluidos, dados_pedido, msg)
         print(dados_pedido)
-    msg = "[*] Principal - pagamentos recusados - Waiting for messages."
-    #consumir = Consumir(pagamentos_recusados, callback, msg)
-    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
-    channel = connection.channel()
-    result = channel.queue_declare(queue='', exclusive=True)
-    queue_name = result.method.queue
-    channel.queue_bind(exchange='direct_loja', queue=queue_name, routing_key=pagamentos_recusados)
-    channel.basic_consume(queue=queue_name, on_message_callback=callback, auto_ack=True)
-    print(msg)
-    channel.start_consuming()
 
+    msg = "[*] Principal - pagamentos recusados - Waiting for messages."
+    Consumir(pagamentos_recusados, callback, msg)
+    
 def consome_pedidos_enviados():
     def callback(ch, method, properties, body):
         dados_pedido = json.loads(body)
         atualiza_status_pedido(dados_pedido)
 
-    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
-    channel = connection.channel()
-    result = channel.queue_declare(queue='', exclusive=True)
-    queue_name = result.method.queue
-    channel.queue_bind(exchange='direct_loja', queue=queue_name, routing_key=pedidos_enviados)
-    channel.basic_consume(queue=queue_name, on_message_callback=callback, auto_ack=True)
-    print("[*] Principal - pedidos enviados - Waiting for messages.")
-    channel.start_consuming()
+    msg = "[*] Principal - pedidos enviados - Waiting for messages."
+    Consumir(pedidos_enviados, callback, msg)
+
 
 if __name__ == '__main__':
     thread1 = threading.Thread(target=consome_pagamentos_aprovados)

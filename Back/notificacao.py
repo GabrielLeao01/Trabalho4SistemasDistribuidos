@@ -31,15 +31,10 @@ def consome_pedidos_criados():
         with app.app_context():
             message = f"Pedido {pedido['id']} criado"
             sse.publish({"message": message}, type='publish')
-        
-    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
-    channel = connection.channel()
-    result = channel.queue_declare(queue='', exclusive=True)
-    queue_name = result.method.queue
-    channel.queue_bind(exchange='direct_loja', queue=queue_name, routing_key=pedidos_criados)
-    channel.basic_consume(queue=queue_name, on_message_callback=callback, auto_ack=True)
-    print(' [*] NOTIFICACAO Waiting for messages. To exit press CTRL+C')
-    channel.start_consuming()
+
+    msg = ' [*] NOTIFICACAO Waiting for messages. To exit press CTRL+C'
+    Consumir(pedidos_criados, callback, msg)
+
 
 def consome_Pagamentos_aprovados():
     def callback(ch, method, properties, body):
@@ -49,14 +44,8 @@ def consome_Pagamentos_aprovados():
             message = f"Pedido {pedido['id']} - pagamento aprovado"
             sse.publish({"message": message}, type='publish')
         
-    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
-    channel = connection.channel()
-    result = channel.queue_declare(queue='', exclusive=True)
-    queue_name = result.method.queue
-    channel.queue_bind(exchange='direct_loja', queue=queue_name, routing_key=pagamentos_aprovados)
-    channel.basic_consume(queue=queue_name, on_message_callback=callback, auto_ack=True)
-    print(' [*] NOTIFICACAO Waiting for messages. To exit press CTRL+C')
-    channel.start_consuming()
+    msg = ' [*] NOTIFICACAO Waiting for messages. To exit press CTRL+C'
+    Consumir(pagamentos_aprovados, callback, msg)
 
 def consome_pagamento_recusado():
     def callback(ch, method, properties, body):
@@ -66,14 +55,8 @@ def consome_pagamento_recusado():
             message =f"Pedido {pedido['id']} - pagamento recusado"
             sse.publish({"message": message}, type='publish')
         
-    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
-    channel = connection.channel()
-    result = channel.queue_declare(queue='', exclusive=True)
-    queue_name = result.method.queue
-    channel.queue_bind(exchange='direct_loja', queue=queue_name, routing_key=pagamentos_recusados)
-    channel.basic_consume(queue=queue_name, on_message_callback=callback, auto_ack=True)
-    print(' [*] NOTIFICACAO Waiting for messages. To exit press CTRL+C')
-    channel.start_consuming()
+    msg = ' [*] NOTIFICACAO Waiting for messages. To exit press CTRL+C'
+    Consumir(pagamentos_recusados, callback, msg)
 
 def consome_pedido_enviado():
     def callback(ch, method, properties, body):
@@ -85,14 +68,8 @@ def consome_pedido_enviado():
             sse.publish({"message": message}, type='publish')
 
         
-    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
-    channel = connection.channel()
-    result = channel.queue_declare(queue='', exclusive=True)
-    queue_name = result.method.queue
-    channel.queue_bind(exchange='direct_loja', queue=queue_name, routing_key=pedidos_enviados)
-    channel.basic_consume(queue=queue_name, on_message_callback=callback, auto_ack=True)
-    print(' [*] NOTIFICACAO Waiting for messages. To exit press CTRL+C')
-    channel.start_consuming()
+    msg = ' [*] NOTIFICACAO Waiting for messages. To exit press CTRL+C'
+    Consumir(pedidos_enviados, callback, msg)
     
 
 def consome_pedido_excluido():
@@ -105,7 +82,7 @@ def consome_pedido_excluido():
             sse.publish({"message": message}, type='publish')
 
     msg = ' [*] NOTIFICACAO Waiting for messages. To exit press CTRL+C'  
-    consumir = Consumir(pedidos_excluidos, callback, msg)
+    Consumir(pedidos_excluidos, callback, msg)
 
                 
 if __name__ == '__main__':

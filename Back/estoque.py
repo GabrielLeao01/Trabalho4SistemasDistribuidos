@@ -59,12 +59,14 @@ def consome_pedidos_criados():
                             print(f"nao ha produtos {produto['id']} suficientes no estoque")
         else: 
             print("Erro: pedido não é um dicionário") 
-    consumir = Consumir(pedidos_criados, callback, ' [*] ESTOQUE Waiting for messages. To exit press CTRL+C')
+
+    msg =  ' [*] ESTOQUE Waiting for messages. To exit press CTRL+C'
+    Consumir(pedidos_criados, callback,msg)
 
 def consome_pedidos_excluidos():
     def callback(ch, method, properties, body):
         pedido = json.loads(body)
-        print(f"pedido {pedido['id']} exlcuido, retornando itens no estoque")
+        print(f"pedido {pedido['id']} excluido, retornando itens no estoque")
         if isinstance(pedido, dict): 
             for item in pedido['items']:
                 for produto in produtos:
@@ -73,14 +75,9 @@ def consome_pedidos_excluidos():
                         produto['estoque'] += item['quantidade']
         else: 
             print("Erro: pedido não é um dicionário") 
-    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
-    channel = connection.channel()
-    result = channel.queue_declare(queue='', exclusive=True)
-    queue_name = result.method.queue
-    channel.queue_bind(exchange='direct_loja', queue=queue_name, routing_key=pedidos_excluidos)
-    channel.basic_consume(queue=queue_name, on_message_callback=callback, auto_ack=True)
-    print(' [*] ESTOQUE EXLCUIDOS Waiting for messages. To exit press CTRL+C')
-    channel.start_consuming()          
+    msg = ' [*] ESTOQUE EXCLUIDOS Waiting for messages. To exit press CTRL+C'
+    Consumir(pedidos_excluidos, callback, msg)
+   
           
 if __name__ == '__main__':
     thread_consome_pedidos_criados = threading.Thread(target=consome_pedidos_criados)

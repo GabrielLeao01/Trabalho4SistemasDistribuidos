@@ -36,9 +36,9 @@ def altera_status_pedido(pedido,pagamento):
 
 
 def publica_pagamento_aprovado(pedido):
-    publicar = Publicar(pagamentos_aprovados, pedido, " [x] Sent 'Pagamento Aprovado'")
+    Publicar(pagamentos_aprovados, pedido, "'Pagamento Aprovado'")
 def publica_pagamento_recusado(pedido):
-    publicar = Publicar(pagamentos_recusados, pedido, " [x] Sent 'Pagamento Recusado'")
+    Publicar(pagamentos_recusados, pedido, "'Pagamento Recusado'")
 
 def consome_pedidos_criados():
     def callback(ch, method, properties, body):
@@ -57,14 +57,9 @@ def consome_pedidos_criados():
                 publica_pagamento_recusado(pedido)
             else:
                 print('opcao nao valida')
-    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
-    channel = connection.channel()
-    result = channel.queue_declare(queue='', exclusive=True)
-    queue_name = result.method.queue
-    channel.queue_bind(exchange='direct_loja', queue=queue_name, routing_key=pedidos_criados)
-    channel.basic_consume(queue=queue_name, on_message_callback=callback, auto_ack=True)
-    print(' [*] Pagamento Waiting for messages. To exit press CTRL+C')
-    channel.start_consuming()
+
+    msg = ' [*] Pagamento Waiting for messages. To exit press CTRL+C'
+    Consumir(pedidos_criados, callback, msg)
 
 if __name__ == '__main__':
     thread1 = threading.Thread(target=consome_pedidos_criados)

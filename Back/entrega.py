@@ -41,23 +41,14 @@ def consome_pagamentos_aprovados():
         publica_pedido_enviado(pedido)
         print("pagamento aprovado recebido")
 
-    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
-    channel = connection.channel()
-    result = channel.queue_declare(queue='', exclusive=True)
-    queue_name = result.method.queue
-    channel.queue_bind(exchange='direct_loja', queue=queue_name, routing_key=pagamentos_aprovados)
-    channel.basic_consume(queue=queue_name, on_message_callback=callback, auto_ack=True)
-    print("[*] Entrega - esperando pagamentos aprovados - Waiting for messages.")
-    channel.start_consuming()
+    msg = "[*] Entrega - esperando pagamentos aprovados - Waiting for messages."
+    Consumir(pagamentos_aprovados, callback, msg)
+
 
 def publica_pedido_enviado(pedido):
     print(" PEDIDO ENVIADO  ________------------")
-    connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
-    channel = connection.channel()
-    channel.exchange_declare(exchange='direct_loja', exchange_type='direct')
-    channel.basic_publish(exchange='direct_loja', routing_key=pedidos_enviados, body=json.dumps(pedido))
-    print(" [x] Sent 'pedido enviado'")
-    connection.close()
+    msg = "'Pedido Enviado'"
+    Publicar(pedidos_enviados, pedido, msg)
 
 if __name__ == '__main__':
     thread1 = threading.Thread(target=consome_pagamentos_aprovados)
