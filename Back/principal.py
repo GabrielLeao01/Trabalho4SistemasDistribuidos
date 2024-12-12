@@ -100,18 +100,24 @@ def efetivar_compra():
 @app.route('/pedidos/excluir', methods=['DELETE'])
 def excluir_pedido():
     pedido = request.json
+    pedido_id = pedido.get('id')
+    if not pedido_id:
+        return jsonify({"message": "ID do pedido não informado"}), 400
     for p in pedidos:
-        if(p['id'] == pedido['id'] and not (p['status'] == 'Pedido excluido')):
+        if p['id'] == pedido_id:
+            if p['status'] == 'Pedido excluido':
+                return jsonify({"message": "Pedido já foi excluído"}), 400
+            p['status'] = 'Pedido excluido'
             pedido['status'] = 'Pedido excluido'
-            p['status'] = pedido['status']
             pedido['items'] = p['items']
+            connection = pika.BlockingConnection(pika.ConnectionParameters('localhost'))
+            channel = connection.channel()
+            channel.exchange_declare(exchange='direct_loja', exchange_type='direct')
             message = json.dumps(pedido)
-            msg = "'Pedidos excluidos'"
-            print(message)
-            Publicar(pedidos_excluidos, pedido, msg)
-            return jsonify({"message": "Pedido removido"}), 200
-        else:
-            return jsonify({"message": "Pedido não existe"}), 404
+            channel.basic_publish(exchange='direct_loja', routing_key='pedidos_excluidos', body=message)
+            connection.close()
+            return jsonify({"message": "Pedido removido com sucesso"}), 200
+    return jsonify({"message": "Pedido não encontrado"}), 404
 
         
 
