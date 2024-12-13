@@ -9,8 +9,12 @@ CORS(app)
 
 @app.route('/webhook', methods=['POST'])
 def efetivar_compra():
-    pedido = request.json()
+    pedido = request.get_json()
     pagamento = input("Pagamento - aprovado/recusado: ")
+    print(pedido)
+    return jsonify({
+        "msg": "Informações recebidas"
+    })
     pedido = altera_status_pedido(pedido,pagamento)
     try:
         response = requests.post('http://localhost:3001/pagamento',json.dumps(pedido) )

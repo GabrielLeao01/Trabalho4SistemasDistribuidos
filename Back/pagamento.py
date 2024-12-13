@@ -50,12 +50,8 @@ def publica_pagamento_recusado(pedido):
 def consome_pedidos_criados():
     def callback(ch, method, properties, body):
         pedido = json.loads(body)
-        
-        print(body)
-        pedido = json.dumps(pedido)
-        headers = {'Content-Type': 'application/json'}  
-        response = requests.post('http://localhost:3010/webhook', json=pedido, headers=headers)  
-        print(response.status_code, response.text)
+        response = requests.post('http://localhost:3010/webhook', json=pedido)  
+        print(response.status_code, json.loads(response.text))
 
     msg = ' [*] Pagamento Waiting for messages. To exit press CTRL+C'
     Consumir(pedidos_criados, callback, msg)
