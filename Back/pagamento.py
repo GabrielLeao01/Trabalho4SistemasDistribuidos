@@ -9,6 +9,7 @@ import pika
 import threading
 from publicar import Publicar
 from consumir import Consumir
+import requests
 app = Flask(__name__)
 CORS(app)
 
@@ -21,11 +22,25 @@ pedidos_criados = 'Pedidos_Criados'
 pedidos_excluidos = 'Pedidos_Excluidos'
 
 pedidos = []
+pedidos_aguardando_pagamento = []
 
-def altera_status_pedido(pedido,pagamento): 
-    pedido['status'] = 'Pagamento '+ pagamento 
-    return pedido
+@app.route('/pedidos', methods=['GET'])
+def get_pedidos():
+    return jsonify(pedidos_aguardando_pagamento), 200
 
+@app.route('/pagamento', methods=['POST'])
+def pagamento_efetuado():
+    pedido = request.json()
+    json.loads(pedido)
+    print(pedido)
+
+    if(pedido):            
+        if(pedido['status'] == 'Pagamento aprovado'):
+                publica_pagamento_aprovado(pedido)
+        elif(pedido['status'] == 'Pagamento recusado'):
+                publica_pagamento_recusado(pedido)
+        else:
+                print('opcao nao valida')
 
 def publica_pagamento_aprovado(pedido):
     Publicar(pagamentos_aprovados, pedido, "'Pagamento Aprovado'")
@@ -35,23 +50,16 @@ def publica_pagamento_recusado(pedido):
 def consome_pedidos_criados():
     def callback(ch, method, properties, body):
         pedido = json.loads(body)
-        pagamento = input("Pagamento - aprovado/recusado: ")
-        if(pedido):            
-            if(pagamento == 'aprovado'):
-                print(pedido)
-                print(type(pedido))
-                pedido = altera_status_pedido(pedido,pagamento)
-                publica_pagamento_aprovado(pedido)
-            elif(pagamento == 'recusado'):
-                print(pedido)
-                print(type(pedido))
-                pedido = altera_status_pedido(pedido,pagamento)
-                publica_pagamento_recusado(pedido)
-            else:
-                print('opcao nao valida')
+        
+        print(body)
+        pedido = json.dumps(pedido)
+        headers = {'Content-Type': 'application/json'}  
+        response = requests.post('http://localhost:3010/webhook', json=pedido, headers=headers)  
+        print(response.status_code, response.text)
 
     msg = ' [*] Pagamento Waiting for messages. To exit press CTRL+C'
     Consumir(pedidos_criados, callback, msg)
+
 
 if __name__ == '__main__':
     thread1 = threading.Thread(target=consome_pedidos_criados)

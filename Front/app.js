@@ -48,8 +48,8 @@ async function removePedido(pedidoId) {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id:pedidoId })
     });
-    alert('Pedido removido com sucesso!');
     carregaProdutos();
+    alert('Pedido removido com sucesso!');
 }
 
 async function adicionaCarrinho(produtoId) {
@@ -88,9 +88,10 @@ async function removeCarrinho(produtoId) {
 checkoutBtn.onclick = async () => {
     await fetch(`${CARRINHO_API}/checkout`, { method: 'POST' });
     carregaCarrinho();
-    alert('Pedido realizado com sucesso!');
     carregaPedidos();
     carregaProdutos();
+    alert('Pedido realizado com sucesso!');
+
 };
 
 function setupSSE() {
