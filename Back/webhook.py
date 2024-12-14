@@ -3,24 +3,26 @@ from flask_cors import CORS
 from flask import Flask, render_template
 import json
 import requests
+import threading
 
 app = Flask(__name__)
 CORS(app)
-
+def envia_resultado_pagamento(pedido):
+    print('enviando resultado do pagamento')
+    response = requests.post('http://localhost:3012/pagamento', json=pedido)
+    print(response)
+    
+thread = threading.Thread(target=envia_resultado_pagamento)
 @app.route('/webhook', methods=['POST'])
 def efetivar_compra():
     pedido = request.get_json()
     pagamento = input("Pagamento - aprovado/recusado: ")
-    print(pedido)
+    pedido = altera_status_pedido(pedido,pagamento)
+    envia_resultado_pagamento(pedido)
     return jsonify({
         "msg": "Informações recebidas"
     })
-    pedido = altera_status_pedido(pedido,pagamento)
-    try:
-        response = requests.post('http://localhost:3001/pagamento',json.dumps(pedido) )
-    except requests.exceptions.RequestException as e:
-        print("Erro na requisição:", e)
-        exit(1)
+
 
 def altera_status_pedido(pedido,pagamento): 
     pedido['status'] = 'Pagamento '+ pagamento 

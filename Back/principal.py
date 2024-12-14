@@ -14,14 +14,15 @@ app = Flask(__name__)
 CORS(app)
 produtos = []
 def atualiza_produtos():
-    try:
-        response = requests.get('http://localhost:3002/estoque')
-        global produtos
-        produtos = response.json()
-        print("Resposta do Microserviço B:", response.json())
-    except requests.exceptions.RequestException as e:
-        print("Erro na requisição:", e)
-        exit(1)
+        try:
+            # iniciar estoque primeiro
+            response = requests.get('http://localhost:3002/estoque')
+            global produtos
+            produtos = response.json()
+            print("Resposta do Microserviço B:", response.json())
+        except requests.exceptions.RequestException as e:
+            print("Erro na requisição:", e)
+            exit(1)
 
 atualiza_produtos()
 carrinho = []

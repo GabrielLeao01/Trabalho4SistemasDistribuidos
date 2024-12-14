@@ -30,17 +30,18 @@ def get_pedidos():
 
 @app.route('/pagamento', methods=['POST'])
 def pagamento_efetuado():
-    pedido = request.json()
-    json.loads(pedido)
-    print(pedido)
-
+    pedido = request.get_json()
     if(pedido):            
         if(pedido['status'] == 'Pagamento aprovado'):
-                publica_pagamento_aprovado(pedido)
+            print('aprovado')
+            publica_pagamento_aprovado(pedido)
         elif(pedido['status'] == 'Pagamento recusado'):
-                publica_pagamento_recusado(pedido)
+            print('recusado')
+            publica_pagamento_recusado(pedido)
         else:
-                print('opcao nao valida')
+            print('opcao nao valida')
+    return jsonify({'msg': 'resultado do pagamento recebido'})
+
 
 def publica_pagamento_aprovado(pedido):
     Publicar(pagamentos_aprovados, pedido, "'Pagamento Aprovado'")
@@ -60,5 +61,5 @@ def consome_pedidos_criados():
 if __name__ == '__main__':
     thread1 = threading.Thread(target=consome_pedidos_criados)
     thread1.start()
-    app.run(debug=False, port=3001)
+    app.run(debug=False, port=3012)
 

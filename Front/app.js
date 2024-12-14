@@ -46,7 +46,7 @@ async function removePedido(pedidoId) {
     await fetch(`${API_BASE_URL}/pedidos/excluir`, {
         method: 'DELETE',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ id:pedidoId })
+        body: JSON.stringify({ 'id':pedidoId })
     });
     carregaProdutos();
     alert('Pedido removido com sucesso!');
